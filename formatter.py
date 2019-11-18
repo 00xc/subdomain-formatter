@@ -2,7 +2,7 @@ import sys
 import argparse
 
 __author__ = "https://github.com/00xc/"
-__version__ = "0.1a"
+__version__ = "0.1b"
 
 def read_inputs(info, opts, h, defaults, mvar):
 	parser = argparse.ArgumentParser(description=info)
@@ -24,7 +24,9 @@ def tabprint(s, level):
 	if paragraph and prev>level: front="\n"
 	else: front = ""
 
-	print(front + "\t"*(level-b) + s)
+	t = (level-b)
+
+	print(front + "\t"*t + s)
 	prev = level
 
 def main(domains, match, level):
@@ -38,8 +40,8 @@ def main(domains, match, level):
 		tabprint(".".join(c), level+1)
 		main(domains, c, level+1)
 
-def fill_gaps(domains, base_level, max_level, level):
-	if level > max_level: return domains
+def fill_gaps(domains, base_level, level):
+	if level == base_level: return domains
 
 	for d in domains:
 		if len(d) == level:
@@ -47,7 +49,7 @@ def fill_gaps(domains, base_level, max_level, level):
 			if parent not in domains:
 				domains.append(parent)
 
-	domains = fill_gaps(domains, base_level, max_level, level+1)
+	domains = fill_gaps(domains, base_level, level-1)
 	return domains
 
 if __name__ == '__main__':
@@ -65,7 +67,7 @@ if __name__ == '__main__':
 	try:
 		with open(args.i, "r") as f:
 			for line in f:
-				line = line.rstrip()
+				line = line.rstrip().lstrip()
 				if line.count("://")>0:
 					line = line.split("://", 1)[1]
 				line = tuple(line.split("."))
@@ -82,7 +84,7 @@ if __name__ == '__main__':
 		args.b = tuple(min(domains, key=len))[-2:]
 
 	# Add intermediate subdomains
-	domains = fill_gaps(domains, len(args.b), max([len(x) for x in domains]), len(args.b)+1)
+	domains = fill_gaps(domains, len(args.b), max([len(x) for x in domains]))
 
 	# Parameters for the tabprint() function
 	global prev, paragraph, b
