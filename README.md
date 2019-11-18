@@ -1,4 +1,4 @@
-# Subdomain formatter v0.1a #
+# Subdomain formatter v0.1b #
 A short script that formats a list of subdomains to give a better insight into the domain structure of an organization.
 
 ## Usage ##
