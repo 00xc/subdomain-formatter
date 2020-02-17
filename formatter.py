@@ -1,8 +1,9 @@
 import sys
 import argparse
+from collections import namedtuple
 
 __author__ = "https://github.com/00xc/"
-__version__ = "0.1b"
+__version__ = "0.1c"
 
 def read_inputs(info, opts, h, defaults, mvar):
 	parser = argparse.ArgumentParser(description=info)
@@ -19,38 +20,37 @@ def read_inputs(info, opts, h, defaults, mvar):
 	return args
 
 def tabprint(s, level):
-	global prev, paragraph, b
+	global prev
 
 	if paragraph and prev>level: front="\n"
 	else: front = ""
 
-	t = (level-b)
-
-	print(front + "\t"*t + s)
+	print(front + "\t"*(level-b) + s)
 	prev = level
 
 def main(domains, match, level):
 	toprint = list()
 	for c in domains:
-		if len(c) == (level+1) and c[-level:] == match:
+		if len(c.domain) == (level+1) and c.domain[-level:] == match:
 			toprint.append(c)
 
-	toprint.sort()
-	for c in toprint:
-		tabprint(".".join(c), level+1)
-		main(domains, c, level+1)
+	for c in sorted(toprint, key=lambda x: x.domain):
+		tabprint(".".join(c.domain) + ("" if not c.added else " *"), level+1)
+		main(domains, c.domain, level+1)
 
 def fill_gaps(domains, base_level, level):
 	if level == base_level: return domains
 
-	for d in domains:
-		if len(d) == level:
-			parent = d[-(level-1):]
-			if parent not in domains:
-				domains.append(parent)
+	fill_domains = set()
 
-	domains = fill_gaps(domains, base_level, level-1)
-	return domains
+	for d in domains:
+		if len(d.domain) == level:
+			parent = domain_tuple(d.domain[-(level-1):], True)
+			if parent.domain not in [dd.domain for dd in domains]:
+				fill_domains.add(parent)
+
+	domains.update(fill_domains)
+	return fill_gaps(domains, base_level, level-1)
 
 if __name__ == '__main__':
 	
@@ -62,32 +62,32 @@ if __name__ == '__main__':
 	mvar = ["input_file", "base_domain", ""]
 	args = read_inputs(info, opts, h, defaults, mvar)
 
-	# Read input file
+	domain_tuple = namedtuple("domain_tuple", ["domain", "added"])
+
 	domains = set()
 	try:
 		with open(args.i, "r") as f:
 			for line in f:
 				line = line.rstrip().lstrip()
-				if line.count("://")>0:
-					line = line.split("://", 1)[1]
-				line = tuple(line.split("."))
-				domains.add(line)
-		domains = list(domains)
+				if "://" in line:
+					line = line = split("://", 1)[1]
+
+				domains.add(domain_tuple(
+					tuple(line.split(".")),
+					False
+				))
 	except FileNotFoundError:
 		sys.exit("[-] Input file not found")
 
-	# Base domain
-	if args.b != "":
-		args.b = args.b.split("://")[-1]
+	if len(args.b) > 0:
+		args.b = args.b.split("://", 1)[1]
 		args.b = tuple(args.b.split("."))
 	else:
-		args.b = tuple(min(domains, key=len))[-2:]
+		args.b = min(domains, key=lambda e: len(e.domain)).domain[-2:]
 
-	# Add intermediate subdomains
-	domains = fill_gaps(domains, len(args.b), max([len(x) for x in domains]))
+	domains = fill_gaps(domains=domains, base_level=len(args.b), level=max(len(x.domain) for x in domains))
 
 	# Parameters for the tabprint() function
-	global prev, paragraph, b
 	prev = len(args.b)
 	paragraph = args.p
 	b = len(args.b)

@@ -1,11 +1,11 @@
-# Subdomain formatter v0.1b #
+# Subdomain formatter v0.1c #
 A short script that formats a list of subdomains to give a better insight into the domain structure of an organization.
 
 ## Usage ##
 ```
 usage: formatter.py [-h] -i input_file [-b base_domain] [-p]
 
-Subdomain formatter v0.1a
+Subdomain formatter v0.1c
 
 optional arguments:
   -h, --help      show this help message and exit
@@ -15,7 +15,7 @@ optional arguments:
 ```
 
 ## Example ##
-Input file:
+For the following input file:
 ```
 branch.github.com
 brandguide.github.com
@@ -56,7 +56,7 @@ vpn-ca.iad.github.com
 vscode-auth.github.com
 www.github.com
 ```
-
+The program outputs the following lines. Inferred subdomains are marked with an asterisk, i.e. for the base domain `c.d`, if `a.b.c.d` is present, but `b.c.d` isn't, the latter will be added to the output with an asterisk at the end.
 ```
 $ python3 formatter.py -i input_file.txt
 github.com
@@ -72,7 +72,7 @@ github.com
 	enterprise.github.com
 		support.enterprise.github.com
 	help.github.com
-	iad.github.com
+	iad.github.com *
 		vpn-ca.iad.github.com
 	import.github.com
 	import2.github.com
